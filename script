@@ -1,3 +1,17 @@
+local stagesFolder = game:GetService("Workspace"):FindFirstChild("Stages")
+local checkpointsFolder = game:GetService("Workspace"):FindFirstChild("Checkpoints")
+
+local activeFolder = nil
+local folderType = nil
+
+if stagesFolder then
+    activeFolder = stagesFolder
+    folderType = "Stages"
+elseif checkpointsFolder then
+    activeFolder = checkpointsFolder
+    folderType = "Checkpoints"
+end
+
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
@@ -11,7 +25,7 @@ local Tab = Window:CreateTab("Main", 4483362458)
 
 local RebirthSection = Tab:CreateSection("Rebirth Tools")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local rebirthRemote = ReplicatedStorage:WaitForChild("Rebirth", 5) -- Timeout of 5s just in case
+local rebirthRemote = ReplicatedStorage:FindFirstChild("Rebirth") or ReplicatedStorage:WaitForChild("Rebirth", 5)
 
 local CreditsTab = Window:CreateTab("Credits", 4483362458)
 
@@ -35,6 +49,7 @@ CreditsTab:CreateParagraph({
    Title = "Discord Server",
    Content = "Join our Discord for script updates, support, and announcements!\n\nServer: discord.gg/QkAZwuEYgP"
 })
+
 Tab:CreateButton({
    Name = "REBIRTH NOW",
    Info = "Manually fires the Rebirth remote event.",
@@ -93,7 +108,6 @@ Tab:CreateToggle({
 })
 
 local AutomationSection = Tab:CreateSection("Automation Settings")
-local checkpointsFolder = game:GetService("Workspace"):FindFirstChild("Checkpoints")
 local autoTeleport = false
 local tpSpeed = 1 
 
@@ -104,8 +118,8 @@ local function getCurrentStage()
     local closestStage = 1
     local shortestDistance = math.huge
     
-    if checkpointsFolder then
-        for _, cp in pairs(checkpointsFolder:GetChildren()) do
+    if activeFolder then
+        for _, cp in pairs(activeFolder:GetChildren()) do
             local stageNum = tonumber(cp.Name)
             if stageNum then
                 local dist = (char.HumanoidRootPart.Position - cp.Position).Magnitude
@@ -143,7 +157,7 @@ Tab:CreateToggle({
            while autoTeleport do
                local current = getCurrentStage()
                local nextStage = tostring(current + 1)
-               local target = checkpointsFolder and checkpointsFolder:FindFirstChild(nextStage)
+               local target = activeFolder and activeFolder:FindFirstChild(nextStage)
                
                if target then
                    local char = game.Players.LocalPlayer.Character
@@ -159,21 +173,44 @@ Tab:CreateToggle({
 
 Tab:CreateSection("Manual Teleports")
 
-if checkpointsFolder then
-    local stages = checkpointsFolder:GetChildren()
+if activeFolder then
+    Tab:CreateParagraph({
+        Title = "Detected Path",
+        Content = "Using: Workspace." .. folderType
+    })
+    
+    local stages = {}
+    for _, child in pairs(activeFolder:GetChildren()) do
+        table.insert(stages, child)
+    end
+    
     table.sort(stages, function(a, b) 
-        return (tonumber(a.Name) or 0) < (tonumber(b.Name) or 0) 
+        local numA = tonumber(a.Name) or 0
+        local numB = tonumber(b.Name) or 0
+        return numA < numB
     end)
-
-    for _, checkpoint in ipairs(stages) do
-        Tab:CreateButton({
-           Name = "Stage " .. checkpoint.Name,
-           Callback = function()
-               local char = game.Players.LocalPlayer.Character
-               if char and char:FindFirstChild("HumanoidRootPart") then
-                   char.HumanoidRootPart.CFrame = checkpoint.CFrame + Vector3.new(0, 3, 0)
-               end
-           end,
+    
+    if #stages > 0 then
+        for _, stage in ipairs(stages) do
+            Tab:CreateButton({
+               Name = folderType == "Stages" and "Stage " .. stage.Name or "Checkpoint " .. stage.Name,
+               Callback = function()
+                   local char = game.Players.LocalPlayer.Character
+                   if char and char:FindFirstChild("HumanoidRootPart") then
+                       char.HumanoidRootPart.CFrame = stage.CFrame + Vector3.new(0, 3, 0)
+                   end
+               end,
+            })
+        end
+    else
+        Tab:CreateParagraph({
+            Title = "No Stages Found",
+            Content = "No numbered stages found in Workspace." .. folderType
         })
     end
+else
+    Tab:CreateParagraph({
+        Title = "No Folder Detected",
+        Content = "Could not find Workspace.Stages or Workspace.Checkpoints"
+    })
 end
