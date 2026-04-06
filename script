@@ -1,0 +1,179 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+   Name = "Auto-Obby & Rebirth",
+   LoadingTitle = "Loading...",
+   LoadingSubtitle = "by TDX",
+   ConfigurationSaving = { Enabled = true }
+})
+
+local Tab = Window:CreateTab("Main", 4483362458)
+
+local RebirthSection = Tab:CreateSection("Rebirth Tools")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local rebirthRemote = ReplicatedStorage:WaitForChild("Rebirth", 5) -- Timeout of 5s just in case
+
+local CreditsTab = Window:CreateTab("Credits", 4483362458)
+
+CreditsTab:CreateSection("Join for Updates")
+
+CreditsTab:CreateButton({
+   Name = "Copy Discord Invite",
+   Info = "Click to copy discord.gg/QkAZwuEYgP",
+   Callback = function()
+       setclipboard("https://discord.gg/QkAZwuEYgP")
+       Rayfield:Notify({
+           Title = "Discord Copied!",
+           Content = "Invite link copied to clipboard",
+           Duration = 3,
+           Image = 4483362458,
+       })
+   end,
+})
+
+CreditsTab:CreateParagraph({
+   Title = "Discord Server",
+   Content = "Join our Discord for script updates, support, and announcements!\n\nServer: discord.gg/QkAZwuEYgP"
+})
+Tab:CreateButton({
+   Name = "REBIRTH NOW",
+   Info = "Manually fires the Rebirth remote event.",
+   Callback = function()
+       if rebirthRemote then
+           rebirthRemote:FireServer()
+           Rayfield:Notify({
+               Title = "Rebirth",
+               Content = "Manual Rebirth Remote Fired!",
+               Duration = 2,
+               Image = 4483362458,
+           })
+       else
+           Rayfield:Notify({
+               Title = "Error",
+               Content = "Rebirth Remote not found in ReplicatedStorage.",
+               Duration = 3,
+               Image = 4483362458,
+           })
+       end
+   end,
+})
+
+local autoRebirth = false
+local rebirthInterval = 5
+
+Tab:CreateSlider({
+   Name = "Auto Rebirth Interval (Seconds)",
+   Info = "How often to auto rebirth",
+   Range = {1, 60},
+   Increment = 1,
+   Suffix = "s",
+   CurrentValue = 15,
+   Flag = "RebirthIntervalSlider",
+   Callback = function(Value)
+      rebirthInterval = Value
+   end,
+})
+
+Tab:CreateToggle({
+   Name = "Enable Auto Rebirth",
+   CurrentValue = false,
+   Flag = "AutoRebirth", 
+   Callback = function(Value)
+       autoRebirth = Value
+       
+       task.spawn(function()
+           while autoRebirth do
+               if rebirthRemote then
+                   rebirthRemote:FireServer()
+               end
+               task.wait(rebirthInterval)
+           end
+       end)
+   end,
+})
+
+local AutomationSection = Tab:CreateSection("Automation Settings")
+local checkpointsFolder = game:GetService("Workspace"):FindFirstChild("Checkpoints")
+local autoTeleport = false
+local tpSpeed = 1 
+
+local function getCurrentStage()
+    local char = game.Players.LocalPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return 1 end
+    
+    local closestStage = 1
+    local shortestDistance = math.huge
+    
+    if checkpointsFolder then
+        for _, cp in pairs(checkpointsFolder:GetChildren()) do
+            local stageNum = tonumber(cp.Name)
+            if stageNum then
+                local dist = (char.HumanoidRootPart.Position - cp.Position).Magnitude
+                if dist < shortestDistance then
+                    shortestDistance = dist
+                    closestStage = stageNum
+                end
+            end
+        end
+    end
+    return closestStage
+end
+
+Tab:CreateSlider({
+   Name = "Teleport Delay (Seconds)",
+   Info = "Lower = Faster. Higher = Safer.",
+   Range = {0.1, 5},
+   Increment = 0.1,
+   Suffix = "s",
+   CurrentValue = 1,
+   Flag = "TPSpeedSlider",
+   Callback = function(Value)
+      tpSpeed = Value
+   end,
+})
+
+Tab:CreateToggle({
+   Name = "Enable Auto-Teleport",
+   CurrentValue = false,
+   Flag = "AutoTP", 
+   Callback = function(Value)
+       autoTeleport = Value
+       
+       task.spawn(function()
+           while autoTeleport do
+               local current = getCurrentStage()
+               local nextStage = tostring(current + 1)
+               local target = checkpointsFolder and checkpointsFolder:FindFirstChild(nextStage)
+               
+               if target then
+                   local char = game.Players.LocalPlayer.Character
+                   if char and char:FindFirstChild("HumanoidRootPart") then
+                       char.HumanoidRootPart.CFrame = target.CFrame + Vector3.new(0, 3, 0)
+                   end
+               end
+               task.wait(tpSpeed) 
+           end
+       end)
+   end,
+})
+
+Tab:CreateSection("Manual Teleports")
+
+if checkpointsFolder then
+    local stages = checkpointsFolder:GetChildren()
+    table.sort(stages, function(a, b) 
+        return (tonumber(a.Name) or 0) < (tonumber(b.Name) or 0) 
+    end)
+
+    for _, checkpoint in ipairs(stages) do
+        Tab:CreateButton({
+           Name = "Stage " .. checkpoint.Name,
+           Callback = function()
+               local char = game.Players.LocalPlayer.Character
+               if char and char:FindFirstChild("HumanoidRootPart") then
+                   char.HumanoidRootPart.CFrame = checkpoint.CFrame + Vector3.new(0, 3, 0)
+               end
+           end,
+        })
+    end
+end
