@@ -77,7 +77,7 @@ local autoRebirth = false
 local rebirthInterval = 5
 
 Tab:CreateSlider({
-   Name = "Auto Rebirth Interval (Seconds)",
+   Name = "Auto Rebirth Speed",
    Info = "How often to auto rebirth",
    Range = {1, 60},
    Increment = 1,
@@ -134,7 +134,7 @@ local function getCurrentStage()
 end
 
 Tab:CreateSlider({
-   Name = "Teleport Delay (Seconds)",
+   Name = "Teleport Speed",
    Info = "Lower = Faster. Higher = Safer.",
    Range = {0.1, 5},
    Increment = 0.1,
