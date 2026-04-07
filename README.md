@@ -1,7 +1,7 @@
 # Auto Rebirth & Auto Level Script
 ## string
 ```lua
-loadstring(game:HttpGet("https://raw.githubusercontent.com/7swazys/auto-rebirth-auto-level-rbx/refs/heads/main/script"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/7swazys/auto-rebirth-auto-level-rbx/refs/heads/main/script.luau"))()
 ```
 
 ## Features
