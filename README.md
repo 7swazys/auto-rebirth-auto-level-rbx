@@ -5,7 +5,7 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/7swazys/auto-rebirth-
 ```
 # Blue Theme
 ```lua
-https://raw.githubusercontent.com/7swazys/auto-rebirth-auto-level-rbx/refs/heads/main/7swazys-theme.luau
+loadstring(game:HttpGet("https://raw.githubusercontent.com/7swazys/auto-rebirth-auto-level-rbx/refs/heads/main/7swazys-theme.luau"))()
 ```
 
 
