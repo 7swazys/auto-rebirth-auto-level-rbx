@@ -3,6 +3,10 @@
 ```lua
 loadstring(game:HttpGet("https://raw.githubusercontent.com/7swazys/auto-rebirth-auto-level-rbx/refs/heads/main/script.luau"))()
 ```
+# Blue Theme
+``lua
+https://raw.githubusercontent.com/7swazys/auto-rebirth-auto-level-rbx/refs/heads/main/7swazys-theme.luau
+```
 
 ## Features
 
